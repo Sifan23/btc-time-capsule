@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "btc_time_capsule_backend": {
+      "candid": "src/btc_time_capsule_backend/btc_time_capsule_backend.did",
+      "package": "btc_time_capsule_backend",
+      "type": "rust"
+    },
+    "btc_time_capsule_frontend": {
+      "dependencies": [
+        "btc_time_capsule_backend"
+      ],
+      "source": [
+        "src/btc_time_capsule_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "btc_time_capsule_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
