@@ -12,6 +12,7 @@ struct TimeCapsule {
     unlock_time: u64,
     created_at: u64,
     is_unlocked: bool,
+    encryption_key: String, 
 }
 
 #[derive(CandidType, Deserialize)]
@@ -33,6 +34,8 @@ fn init() {}
 #[update]
 fn create_capsule(request: CreateCapsuleRequest) -> String {
     let caller = ic_cdk::caller();
+
+    let encrypted_message = encrypt_message(&request.encrypted_message);
     
     // Calculate unlock time (current time + delay in seconds)
     let unlock_time = time() + (request.unlock_delay_days as u64 * 24 * 60 * 60 * 1_000_000_000);
@@ -42,6 +45,7 @@ fn create_capsule(request: CreateCapsuleRequest) -> String {
         unlock_time,
         created_at: time(),
         is_unlocked: false,
+        encryption_key: "vetkey_simulated".to_string(),
     };
     
     CAPSULES.with(|capsules| {
@@ -49,7 +53,7 @@ fn create_capsule(request: CreateCapsuleRequest) -> String {
         capsules_map.entry(caller).or_insert_with(Vec::new).push(new_capsule);
     });
     
-    format!("Time capsule created! Will unlock in {} days", request.unlock_delay_days)
+    format!("Encrypted time capsule created! Will unlock in {} days", request.unlock_delay_days)
 }
 
 #[query]
@@ -61,6 +65,48 @@ fn get_my_capsules() -> Vec<TimeCapsule> {
             .get(&caller)
             .cloned()
             .unwrap_or_default()
+    })
+}
+
+#[update]
+fn unlock_capsule(capsule_index: u32) -> String {
+    let caller = ic_cdk::caller();
+    let current_time = time();
+    
+    CAPSULES.with(|capsules| {
+        let mut capsules_map = capsules.borrow_mut();
+        
+        if let Some(user_capsules) = capsules_map.get_mut(&caller) {
+            if let Some(capsule) = user_capsules.get_mut(capsule_index as usize) {
+                if current_time >= capsule.unlock_time {
+                    let decrypted_message = decrypt_message(&capsule.encrypted_message);
+                    capsule.is_unlocked = true;
+                    return decrypted_message;
+                } else {
+                    return "Capsule not ready to unlock yet!".to_string();
+                }
+            }
+        }
+        "Capsule not found!".to_string()
+    })
+}
+
+#[update]
+fn test_unlock_now(capsule_index: u32) -> String {
+    let caller = ic_cdk::caller();
+    
+    CAPSULES.with(|capsules| {
+        let mut capsules_map = capsules.borrow_mut();
+        
+        if let Some(user_capsules) = capsules_map.get_mut(&caller) {
+            if let Some(capsule) = user_capsules.get_mut(capsule_index as usize) {
+                // Force unlock for testing
+                let decrypted_message = decrypt_message(&capsule.encrypted_message);
+                capsule.is_unlocked = true;
+                return format!("TEST UNLOCK: {}", decrypted_message);
+            }
+        }
+        "Capsule not found!".to_string()
     })
 }
 
@@ -86,6 +132,16 @@ fn verify_bitcoin_ownership(address: String, message: String, signature: String)
 fn get_bitcoin_balance(address: String) -> String {
     "0.001 BTC".to_string()
 }
+
+fn encrypt_message(message: &str) -> String {
+    format!("encrypted_{}", message)
+}
+
+fn decrypt_message(encrypted: &str) -> String {
+    encrypted.replace("encrypted_", "")
+}
+
+
 #[query]
 fn get_my_guardians() -> Vec<String> {
     let caller = ic_cdk::caller();
