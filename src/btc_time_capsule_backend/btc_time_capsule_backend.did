@@ -4,6 +4,8 @@ service : {
   "get_bitcoin_balance": (text) -> (text);
   "get_my_capsules": () -> (vec record { encrypted_message: text; unlock_time: nat64; created_at: nat64; is_unlocked: bool });
   "get_my_guardians": () -> (vec text);
+  "test_unlock_now": (nat32) -> (text);
+  "unlock_capsule": (nat32) -> (text);
   "verify_bitcoin_ownership": (text, text, text) -> (bool);
   "version": () -> (text);
 }
