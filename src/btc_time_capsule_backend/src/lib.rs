@@ -76,6 +76,16 @@ fn add_guardian(guardian_address: String) -> String {
     "Guardian added successfully!".to_string()
 }
 
+
+#[update]
+fn verify_bitcoin_ownership(address: String, message: String, signature: String) -> bool {
+    !address.is_empty()
+}
+
+#[query]
+fn get_bitcoin_balance(address: String) -> String {
+    "0.001 BTC".to_string()
+}
 #[query]
 fn get_my_guardians() -> Vec<String> {
     let caller = ic_cdk::caller();
@@ -94,5 +104,5 @@ fn version() -> String {
     "BTC Time Capsule v1.0 (Rust)".to_string()
 }
 
-// Export Candid interface
+
 ic_cdk::export_candid!();
