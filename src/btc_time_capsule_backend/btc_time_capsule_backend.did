@@ -1,3 +1,9 @@
 service : {
-    "greet": (text) -> (text) query;
+  "add_guardian": (text) -> (text);
+  "create_capsule": (record { encrypted_message: text; unlock_delay_days: nat32 }) -> (text);
+  "get_bitcoin_balance": (text) -> (text);
+  "get_my_capsules": () -> (vec record { encrypted_message: text; unlock_time: nat64; created_at: nat64; is_unlocked: bool });
+  "get_my_guardians": () -> (vec text);
+  "verify_bitcoin_ownership": (text, text, text) -> (bool);
+  "version": () -> (text);
 }
