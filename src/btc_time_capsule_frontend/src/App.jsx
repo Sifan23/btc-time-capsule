@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { btc_time_capsule_backend } from 'declarations/btc_time_capsule_backend';
+import React, { useState, useEffect } from "react";
+import { btc_time_capsule_backend } from "declarations/btc_time_capsule_backend";
 
 const App = () => {
   const [capsules, setCapsules] = useState([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [unlockDays, setUnlockDays] = useState(1);
-  const [bitcoinAddress, setBitcoinAddress] = useState('');
+  const [bitcoinAddress, setBitcoinAddress] = useState("");
   const [isBitcoinVerified, setIsBitcoinVerified] = useState(false);
 
   // Bitcoin sign-in handler
@@ -14,14 +14,14 @@ const App = () => {
       alert("Please enter a Bitcoin address");
       return;
     }
-    
+
     try {
       const verified = await btc_time_capsule_backend.verify_bitcoin_ownership(
-        bitcoinAddress, 
-        "verify", 
+        bitcoinAddress,
+        "verify",
         "signature"
       );
-      
+
       if (verified) {
         setIsBitcoinVerified(true);
         alert("Bitcoin address verified! 🎉");
@@ -37,15 +37,15 @@ const App = () => {
       alert("Please verify your Bitcoin address first!");
       return;
     }
-    
+
     try {
       const result = await btc_time_capsule_backend.create_capsule({
         encrypted_message: message,
-        unlock_delay_days: unlockDays
+        unlock_delay_days: unlockDays,
       });
-      
+
       alert(result);
-      setMessage('');
+      setMessage("");
       // Refresh capsules list
       const myCapsules = await btc_time_capsule_backend.get_my_capsules();
       setCapsules(myCapsules);
@@ -54,21 +54,45 @@ const App = () => {
     }
   };
 
+  const unlockCapsule = async (index) => {
+    try {
+      const decryptedMessage = await btc_time_capsule_backend.unlock_capsule(
+        index
+      );
+      alert(`Decrypted message: ${decryptedMessage}`);
+
+      // Refresh capsules list
+      const myCapsules = await btc_time_capsule_backend.get_my_capsules();
+      setCapsules(myCapsules);
+    } catch (error) {
+      console.error("Error unlocking capsule:", error);
+      alert("Failed to unlock capsule. It may not be ready yet.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 p-8">
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">🔒 BTC Time Capsule</h1>
-          <p className="text-blue-200 text-lg">Store encrypted secrets that unlock automatically</p>
+          <h1 className="text-4xl font-bold text-white mb-4">
+            🔒 BTC Time Capsule
+          </h1>
+          <p className="text-blue-200 text-lg">
+            Store encrypted secrets that unlock automatically
+          </p>
         </header>
 
         {/* Bitcoin Sign-In Section */}
         {!isBitcoinVerified ? (
           <div className="bg-yellow-500 rounded-2xl p-6 shadow-2xl mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">🔑 Sign In with Bitcoin</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              🔑 Sign In with Bitcoin
+            </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-800 mb-2 font-semibold">Your Bitcoin Address</label>
+                <label className="block text-gray-800 mb-2 font-semibold">
+                  Your Bitcoin Address
+                </label>
                 <input
                   type="text"
                   value={bitcoinAddress}
@@ -77,7 +101,7 @@ const App = () => {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
                 />
               </div>
-              <button 
+              <button
                 onClick={handleBitcoinSignIn}
                 className="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition"
               >
@@ -90,19 +114,24 @@ const App = () => {
           </div>
         ) : (
           <div className="bg-green-500 rounded-2xl p-4 mb-8 text-center">
-            <p className="text-white font-semibold">✅ Bitcoin Address Verified: {bitcoinAddress}</p>
+            <p className="text-white font-semibold">
+              ✅ Bitcoin Address Verified: {bitcoinAddress}
+            </p>
           </div>
         )}
-
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Create Capsule Card */}
           <div className="bg-white rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Create New Capsule</h2>
-            
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Create New Capsule
+            </h2>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-2">Your Secret Message</label>
+                <label className="block text-gray-700 mb-2">
+                  Your Secret Message
+                </label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -111,10 +140,12 @@ const App = () => {
                   disabled={!isBitcoinVerified}
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 mb-2">Unlock After (Days)</label>
-                <select 
+                <label className="block text-gray-700 mb-2">
+                  Unlock After (Days)
+                </label>
+                <select
                   value={unlockDays}
                   onChange={(e) => setUnlockDays(parseInt(e.target.value))}
                   className="w-full p-3 border border-gray-300 rounded-lg"
@@ -126,36 +157,67 @@ const App = () => {
                 </select>
               </div>
 
-              <button 
+              <button
                 onClick={createCapsule}
                 disabled={!isBitcoinVerified}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isBitcoinVerified ? "🔒 Create Encrypted Capsule" : "Please Verify Bitcoin First"}
+                {isBitcoinVerified
+                  ? "🔒 Create Encrypted Capsule"
+                  : "Please Verify Bitcoin First"}
               </button>
             </div>
           </div>
 
           {/* My Capsules Card */}
           <div className="bg-white rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">My Time Capsules</h2>
-            
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              My Time Capsules
+            </h2>
+
             <div className="space-y-4">
-              {capsules.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="text-6xl mb-4">⏳</div>
-                  <p>No capsules yet. Create your first one!</p>
+              {capsules.map((capsule, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4"
+                >
+                  <p className="text-gray-600">Capsule #{index + 1}</p>
+                  <p className="text-sm text-gray-500">
+                    Status: {capsule.is_unlocked ? "Unlocked ✅" : "Locked 🔒"}
+                  </p>
+                  <div className="flex space-x-2 mt-2">
+                    <button
+                      onClick={() => unlockCapsule(index)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                    >
+                      🔓 Unlock
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result =
+                            await btc_time_capsule_backend.test_unlock_now(
+                              index
+                            );
+                          alert(result);
+                          // Refresh capsules
+                          const myCapsules =
+                            await btc_time_capsule_backend.get_my_capsules();
+                          setCapsules(myCapsules);
+                        } catch (error) {
+                          console.error("Test unlock failed:", error);
+                        }
+                      }}
+                      className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                    >
+                      🧪 Test Unlock
+                    </button>
+                  </div>
+                  {capsule.is_unlocked && (
+                    <p className="text-green-600 text-sm mt-1">✓ Unlocked</p>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {capsules.map((capsule, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-gray-600">Capsule #{index + 1}</p>
-                      <p className="text-sm text-gray-500">Unlocks in {capsule.unlock_delay_days} days</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
