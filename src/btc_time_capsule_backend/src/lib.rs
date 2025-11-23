@@ -116,12 +116,68 @@ fn add_guardian(guardian_address: String) -> String {
     
     GUARDIANS.with(|guardians| {
         let mut guardians_map = guardians.borrow_mut();
-        guardians_map.entry(caller).or_insert_with(Vec::new).push(guardian_address);
-    });
-    
-    "Guardian added successfully!".to_string()
+        let user_guardians = guardians_map.entry(caller).or_insert_with(Vec::new);
+        
+        // Clone the address to avoid move
+        let guardian_clone = guardian_address.clone();
+        
+        if !user_guardians.contains(&guardian_clone) {
+            user_guardians.push(guardian_clone);
+            format!("Guardian {} added successfully!", guardian_address)
+        } else {
+            "Guardian already exists!".to_string()
+        }
+    })
 }
 
+#[update]
+fn test_guardian_unlock(capsule_index: u32) -> String {
+    let caller = ic_cdk::caller();
+    
+    // Simulate guardian unlock for testing
+    CAPSULES.with(|capsules| {
+        let mut capsules_map = capsules.borrow_mut();
+        
+        if let Some(user_capsules) = capsules_map.get_mut(&caller) {
+            if let Some(capsule) = user_capsules.get_mut(capsule_index as usize) {
+                let decrypted_message = decrypt_message(&capsule.encrypted_message);
+                capsule.is_unlocked = true;
+                return format!("GUARDIAN EMERGENCY UNLOCK: {}", decrypted_message);
+            }
+        }
+        "Capsule not found!".to_string()
+    })
+}
+
+#[update]
+fn guardian_unlock_capsule(guardian_address: String, capsule_index: u32) -> String {
+    let caller = ic_cdk::caller();
+    
+    // Verify the caller is a guardian for this user
+    let is_guardian = GUARDIANS.with(|guardians| {
+        guardians.borrow()
+            .get(&caller)
+            .map_or(false, |guardians_list| guardians_list.contains(&guardian_address))
+    });
+    
+    if !is_guardian {
+        return "Unauthorized: You are not a guardian for this address".to_string();
+    }
+    
+    CAPSULES.with(|capsules| {
+        let mut capsules_map = capsules.borrow_mut();
+        
+        if let Some(user_capsules) = capsules_map.get_mut(&Principal::from_text(&guardian_address).unwrap()) {
+            if let Some(capsule) = user_capsules.get_mut(capsule_index as usize) {
+                // Guardians can unlock immediately (emergency access)
+                let decrypted_message = decrypt_message(&capsule.encrypted_message);
+                capsule.is_unlocked = true;
+                return format!("EMERGENCY UNLOCK by guardian: {}", decrypted_message);
+            }
+        }
+        "Capsule not found!".to_string()
+    })
+}
 
 #[update]
 fn verify_bitcoin_ownership(address: String, message: String, signature: String) -> bool {
