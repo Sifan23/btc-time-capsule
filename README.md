@@ -1,4 +1,4 @@
-# `btc_time_capsule`
+# BTC Time Capsule - ICP Bitcoin DeFi Hackathon Project
 
 Welcome to your new `btc_time_capsule` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
 
